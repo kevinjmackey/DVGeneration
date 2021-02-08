@@ -1,0 +1,50 @@
+[
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFDTables",
+        "Output" : "MFDTables244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFDDeleteTables",
+        "Output" : "MFDDeleteTables244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFDErrorTables",
+        "Output" : "MFDErrorTables244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFDTableViews",
+        "Output" : "MFDTableViews244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    }    
+]

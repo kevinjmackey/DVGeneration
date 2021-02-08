@@ -1,0 +1,28 @@
+[
+    {
+        "Task" : "GenerateFileLevelStructures",
+        "Template" : "FilteredQueuesServicesPermissionsTemplate",
+        "Output" : "FilteredSBObjects.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : [],
+        "Include" : ["CSCQ","TFQ","CARS"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "8/22-2"
+    },    
+    {
+        "Task" : "GenerateFileLevelStructures",
+        "Template" : "GenerateFilterMessageSPTemplate",
+        "Output" : "FilteredSP.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : [],
+        "Include" : ["CSCQ","TFQ","CARS"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "8/22-2"
+    }    
+]

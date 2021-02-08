@@ -1,0 +1,98 @@
+<!--(set_escape)-->
+  None
+<!--(end)-->
+
+    -- ====================================================================================
+    --@!fileName!@_VW Version 1.0 
+    -- ====================================================================================
+
+    DROP VIEW IF EXISTS [@!schemaName!@].[@!fileName!@_VW];
+    GO
+
+create view [@!schemaName!@].[@!fileName!@_VW]
+as
+<!--(for i,rectype in enumerate(rectypenames))-->
+        <!--(if i > 0)-->UNION ALL<!--(end)-->
+        SELECT [b].[RECORD_KEY], [b].[DTS_DTTMSP], [b].[Create_TS], [b].[Modify_TS], [TableName] = '[@!schemaName!@].[@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->]', [RECTYPE] = <!--(if rectype[0] != "No Rectype")-->'@!rectype[0]!@'<!--(else)-->NULL<!--(end)-->
+        ,[DTS_DTTMSP_Reoccur] = <!--(if rectype[1] == "True")-->[r].[DTS_DTTMSP]<!--(else)-->NULL<!--(end)-->
+        ,[ReoccurTableName] = 
+        <!--(if rectype[1] == "True")-->
+            '[@!schemaName!@].[@!rectype[2]!@_Reoccur]'
+        <!--(else)-->NULL<!--(end)-->
+        ,[ValidData] = cast(1 as bit)
+        ,[Max_Occur] = 
+        <!--(if rectype[1] == "True")-->
+            MR.Max_Occur
+        <!--(else)-->NULL<!--(end)-->
+        <!--(if rectype[3] == "Y")-->,[b].[PurgeAfterDate],[b].[HistoryAsOfDate]<!--(end)-->
+        from [@!schemaName!@].[@!rectype[2]!@] [b] 
+        <!--(if rectype[1] == "True")-->
+            LEFT JOIN [@!schemaName!@].[@!rectype[2]!@_Reoccur] [r] on [b].[RECORD_KEY] = [r].[RECORD_KEY] and [r].OCCNO = 1
+                OUTER APPLY
+            (
+                SELECT 
+                    MAX(MR.OCCNO) AS Max_Occur
+                FROM
+                    [@!schemaName!@].[@!rectype[2]!@_Reoccur] AS MR
+                WHERE
+                    MR.RECORD_KEY = b.RECORD_KEY
+            ) AS MR
+
+        <!--(end)-->
+         
+
+        UNION ALL
+        SELECT [b].[RECORD_KEY], [b].[DTS_DTTMSP], [b].[Create_TS], [b].[Modify_TS], [TableName] = '[@!schemaName!@].[@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->_InvalidDataType]', [RECTYPE] = <!--(if rectype[0] != "No Rectype")-->'@!rectype[0]!@'<!--(else)-->NULL<!--(end)--> 
+        ,[DTS_DTTMSP_Reoccur] = <!--(if rectype[1] == "True")-->[r].[DTS_DTTMSP]<!--(else)-->NULL<!--(end)-->
+        ,[ReoccurTableName] = 
+        <!--(if rectype[1] == "True")-->
+            '[@!schemaName!@].[@!rectype[2]!@_Reoccur_InvalidDataType]'
+        <!--(else)-->NULL<!--(end)-->
+        ,[ValidData] = cast(0 as bit)
+        ,[Max_Occur] = null
+        <!--(if rectype[3] == "Y")-->,[b].[PurgeAfterDate],[b].[HistoryAsOfDate]<!--(end)-->
+        from [@!schemaName!@].[@!rectype[2]!@_InvalidDataType] [b] 
+        <!--(if rectype[1] == "True")-->
+            LEFT JOIN [@!schemaName!@].[@!rectype[2]!@_Reoccur_InvalidDataType] [r] on [b].[RECORD_KEY] = [r].[RECORD_KEY] and [r].OCCNO = 1
+        <!--(end)-->
+<!--(end)-->
+;
+GO
+
+ /*Add extended properties for base VIEW database version*/
+
+    DECLARE @schema_name NVARCHAR(255) = '@!schemaName!@'
+    DECLARE @object_type NVARCHAR(255) = 'V'
+    DECLARE @object_name NVARCHAR(255) = '@!fileName!@_VW'
+
+    IF EXISTS ( SELECT
+                        *
+                    FROM
+                        [sys].[extended_properties] [EP]
+                    LEFT JOIN [sys].[all_objects] [O] ON [EP].[major_id] = [O].[object_id]
+                    LEFT JOIN [sys].[schemas] [S] ON [O].[schema_id] = [S].[schema_id]
+                    LEFT JOIN [sys].[columns] AS [c] ON [EP].[major_id] = [c].[object_id] AND
+                                                        [EP].[minor_id] = [c].[column_id]
+                    WHERE
+                        [EP].[name] = 'Data_Dictionary_Version' AND
+                        [S].[name] = @schema_name AND
+                        [O].[type] = @object_type AND
+                        [O].[name] = @object_name )
+
+        EXEC [sys].[sp_updateextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'VIEW'
+           ,@level1name = @object_name
+        
+    ELSE
+        EXEC [sys].[sp_addextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'VIEW'
+           ,@level1name = @object_name;
+GO

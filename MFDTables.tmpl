@@ -1,0 +1,165 @@
+
+    print 'Creating table [@!schemaName!@].[@!mfdBaseTable!@], Version: @!ddVersion!@'
+
+
+    -- ====================================================================================
+    -- @!fileName!@ MFD Table Creation DDL
+    -- Generated on: @!date!@
+    -- Generator Version: @!version!@
+    -- Data Dictionary Version: @!ddVersion!@
+    --
+    -- Version 1.0  Initial version of the template for the Table DDL
+    -- ========================================================================================================================
+
+
+    DROP TABLE IF EXISTS [@!schemaName!@].[@!mfdBaseTable!@];
+    DROP TABLE IF EXISTS [@!schemaName!@].[@!mfdBaseTable!@];
+    GO
+
+SET ANSI_NULLS ON;
+GO
+
+SET QUOTED_IDENTIFIER ON;
+GO
+
+CREATE TABLE [@!schemaName!@].[@!mfdBaseTable!@] (
+    <!--(for i, column in enumerate(mfdColumns))-->
+        <!--(if mfdTables[i].find("REOCCUR")<0)-->
+            <!--(if mfdColumns[i].find("RECORD_KEY")>=0 or mfdColumns[i]=="Create_TS" or mfdColumns[i]=="Modify_ID" or mfdColumns[i]=="DTS_DTTMSP")-->
+                <!--(if SeqNumber[i] > 1)-->    ,<!--(end)-->[@!mfdColumns[i]!@] @!mfdDataTypes[i]!@ NOT NULL -- @!SeqNumber[i]!@
+            <!--(else)-->
+                <!--(if SeqNumber[i] > 1)-->    ,<!--(end)-->[@!mfdColumns[i]!@] @!mfdDataTypes[i]!@ NULL -- @!SeqNumber[i]!@
+            <!--(end)-->  
+        <!--(end)-->     
+    <!--(end)-->
+
+    CONSTRAINT [@!mfdBaseTable!@_PK] PRIMARY KEY <!--(if IsMemoryOptimized == "Y")-->NON<!--(end)-->CLUSTERED 
+    (
+        [RECORD_KEY] ASC
+    )) 
+    <!--(if IsMemoryOptimized == "Y")-->WITH ( MEMORY_OPTIMIZED = ON , DURABILITY = SCHEMA_AND_DATA ) <!--(end)-->
+
+    ALTER TABLE  [@!schemaName!@].[@!mfdBaseTable!@]  ADD CONSTRAINT [DF_@!mfdBaseTable!@_Create_TS] DEFAULT (sysdatetime()) FOR [Create_TS]
+    --ALTER TABLE  [@!schemaName!@].[@!mfdBaseTable!@]  ADD CONSTRAINT [DF_@!mfdBaseTable!@_Modify_TS] DEFAULT (sysdatetime()) FOR [Modify_TS]
+    ALTER TABLE  [@!schemaName!@].[@!mfdBaseTable!@]  ADD CONSTRAINT [DF_@!mfdBaseTable!@_Modify_ID] DEFAULT (suser_sname()) FOR [Modify_ID]
+    ALTER TABLE  [@!schemaName!@].[@!mfdBaseTable!@]  ADD CONSTRAINT [DF_@!mfdBaseTable!@_Modification_Count] DEFAULT (0) FOR [Modification_Count]
+        ;
+    GO
+    <!--(if IsMemoryOptimized == "N")-->
+    /*Add extended properties for base table database version*/
+
+    DECLARE @schema_name NVARCHAR(255) = '@!schemaName!@'
+    DECLARE @object_type NVARCHAR(255) = 'U'
+    DECLARE @object_name NVARCHAR(255) = '@!mfdBaseTable!@'
+
+
+    IF EXISTS ( SELECT
+                        *
+                    FROM
+                        [sys].[extended_properties] [EP]
+                    LEFT JOIN [sys].[all_objects] [O] ON [EP].[major_id] = [O].[object_id]
+                    LEFT JOIN [sys].[schemas] [S] ON [O].[schema_id] = [S].[schema_id]
+                    LEFT JOIN [sys].[columns] AS [c] ON [EP].[major_id] = [c].[object_id] AND
+                                                        [EP].[minor_id] = [c].[column_id]
+                    WHERE
+                        [EP].[name] = 'Data_Dictionary_Version' AND
+                        [S].[name] = @schema_name AND
+                        [O].[type] = @object_type AND
+                        [O].[name] = @object_name )
+
+        EXEC [sys].[sp_updateextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'TABLE'
+           ,@level1name = @object_name
+        
+    ELSE
+        EXEC [sys].[sp_addextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'TABLE'
+           ,@level1name = @object_name
+    <!--(end)-->
+
+<!--(if hasReoccur=="Y")-->
+    DROP TABLE IF EXISTS [@!schemaName!@].[@!mfdReoccurTable!@];
+    DROP TABLE IF EXISTS [@!schemaName!@].[@!fileName!@<!--(if rectype!="Blank Rectype")-->_@!rectype!@<!--(end)-->_reoccur];
+    GO
+
+SET ANSI_NULLS ON;
+GO
+
+SET QUOTED_IDENTIFIER ON;
+GO
+CREATE TABLE [@!schemaName!@].[@!mfdReoccurTable!@] (
+    <!--(for i, column in enumerate(mfdColumns))-->
+        <!--(if mfdTables[i].find("REOCCUR")>0)-->
+            <!--(if mfdColumns[i].find("RECORD_KEY")>=0 or mfdColumns[i]=="Create_TS" or mfdColumns[i]=="Modify_ID" or mfdColumns[i]=="DTS_DTTMSP" or mfdColumns[i]=="OCCNO")-->
+                <!--(if SeqNumber[i] > 1)-->    ,<!--(end)-->[@!mfdColumns[i]!@] @!mfdDataTypes[i]!@ NOT NULL -- @!SeqNumber[i]!@
+            <!--(else)-->
+                <!--(if SeqNumber[i] > 1)-->    ,<!--(end)-->[@!mfdColumns[i]!@] @!mfdDataTypes[i]!@ NULL -- @!SeqNumber[i]!@
+            <!--(end)-->  
+        <!--(end)-->     
+    <!--(end)-->
+
+    CONSTRAINT [@!mfdReoccurTable!@_PK] PRIMARY KEY <!--(if IsMemoryOptimized == "Y")-->NON<!--(end)-->CLUSTERED  
+    (
+        [RECORD_KEY] ASC, [OCCNO] ASC
+    ))
+    <!--(if IsMemoryOptimized == "Y")-->WITH ( MEMORY_OPTIMIZED = ON , DURABILITY = SCHEMA_AND_DATA ) <!--(end)-->
+    ;
+ 
+ ALTER TABLE  [@!schemaName!@].[@!mfdReoccurTable!@]  ADD CONSTRAINT [DF_@!mfdReoccurTable!@_Create_TS] DEFAULT (sysdatetime()) FOR [Create_TS]
+ --ALTER TABLE  [@!schemaName!@].[@!mfdReoccurTable!@]  ADD CONSTRAINT [DF_@!mfdReoccurTable!@_Modify_TS] DEFAULT (sysdatetime()) FOR [Modify_TS]
+ ALTER TABLE  [@!schemaName!@].[@!mfdReoccurTable!@]  ADD CONSTRAINT [DF_@!mfdReoccurTable!@_Modify_ID] DEFAULT (suser_sname()) FOR [Modify_ID]
+ALTER TABLE  [@!schemaName!@].[@!mfdReoccurTable!@]  ADD CONSTRAINT [DF_@!mfdReoccurTable!@_Modification_Count] DEFAULT (0) FOR [Modification_Count]
+    
+GO
+
+    <!--(if IsMemoryOptimized == "N")-->
+    /*Add extended properties for reoccur table database version*/
+
+    DECLARE @schema_name NVARCHAR(255) = '@!schemaName!@'
+    DECLARE @object_type NVARCHAR(255) = 'U'
+    DECLARE @object_name NVARCHAR(255) = '@!mfdReoccurTable!@'
+
+
+    IF EXISTS ( SELECT
+                        *
+                    FROM
+                        [sys].[extended_properties] [EP]
+                    LEFT JOIN [sys].[all_objects] [O] ON [EP].[major_id] = [O].[object_id]
+                    LEFT JOIN [sys].[schemas] [S] ON [O].[schema_id] = [S].[schema_id]
+                    LEFT JOIN [sys].[columns] AS [c] ON [EP].[major_id] = [c].[object_id] AND
+                                                        [EP].[minor_id] = [c].[column_id]
+                    WHERE
+                        [EP].[name] = 'Data_Dictionary_Version' AND
+                        [S].[name] = @schema_name AND
+                        [O].[type] = @object_type AND
+                        [O].[name] = @object_name )
+
+        EXEC [sys].[sp_updateextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'TABLE'
+           ,@level1name = @object_name
+        
+    ELSE
+        EXEC [sys].[sp_addextendedproperty]
+            @name = N'Data_Dictionary_Version'
+           ,@value = N'@!ddVersion!@'
+           ,@level0type = N'SCHEMA'
+           ,@level0name = @schema_name
+           ,@level1type = N'TABLE'
+           ,@level1name = @object_name
+    <!--(end)-->
+<!--(end)-->
+
+
+GO

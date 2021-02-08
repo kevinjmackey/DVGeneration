@@ -1,0 +1,17 @@
+{
+  "azureFunctions.projectRuntime": "~2",
+  "azureFunctions.projectLanguage": "Python",
+  "azureFunctions.templateFilter": "Verified",
+  "azureFunctions.deploySubpath": "DVGeneration.zip",
+  "azureFunctions.preDeployTask": "func: pack",
+  "files.exclude": {
+    "obj": true,
+    "bin": true
+  },
+  "azureFunctions.pythonVenv": ".env",
+  "debug.internalConsoleOptions": "neverOpen",
+  "python.pythonPath": "dvgen\\Scripts\\python.exe",
+  "FSharp.fsacRuntime": "netcore",
+  "python.linting.pylintEnabled": true,
+  "python.linting.enabled": true
+}

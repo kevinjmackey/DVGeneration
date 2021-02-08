@@ -1,0 +1,30 @@
+[
+    {
+        "Task" : "GenerateStageCombinedTables",
+        "Template" : "LegacySingleTableProcessed",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/combinedfiles/",
+        "Suffix" : "ProcessedTable.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Sources" : ["IISX", "CSCQ"],
+        "Exclude" : [],
+        "All" : "False",
+        "Options" : [],
+        "Test" : "5/19-1"
+    },
+    {
+        "Task" : "GenerateStageCombinedTables",
+        "Template" : "LegacySingleTableTVFunction",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/combinedfiles/",
+        "Suffix" : "TVFunction.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Sources" : ["IISX", "CSCQ"],
+        "Exclude" : [],
+        "All" : "False",
+        "Options" : [],
+        "Test" : "5/19-1"
+    }
+]

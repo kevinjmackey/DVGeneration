@@ -1,0 +1,15 @@
+[
+    {
+        "Task" : "GenerateFastUnloadFiles",
+        "Template" : "FullFunload",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/funloadfiles/",
+        "Version" : 243,
+        "Environment" : "YRC-M204",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Interval" : 5,
+        "Options" : [],
+        "Test" : "6/24-41"
+    }
+]

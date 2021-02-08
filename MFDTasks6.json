@@ -1,0 +1,14 @@
+[
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFD_SP_3_ProcessMessageTypeTemplate",
+        "Output" : "MFD_SP_3_ProcessMessageType244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    }    
+]

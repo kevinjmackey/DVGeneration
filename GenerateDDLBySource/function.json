@@ -1,0 +1,33 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "post"
+      ]
+    },
+    {
+      "type": "blob",
+      "name": "inputBlob",
+      "path": "dvcodegencontainer/assets/templates/{template}.tmpl",
+      "connection": "AzureWebJobsDashboard",
+      "direction": "in"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "$return"
+    },
+    {
+      "type": "blob",
+      "name": "outputBlob",
+      "path": "dvcodegencontainer/assets/output/{folder}/{output}",
+      "connection": "AzureWebJobsDashboard",
+      "direction": "out"
+    }
+  ]
+}

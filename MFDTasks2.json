@@ -1,0 +1,50 @@
+[
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "MFD_FileLevelView",
+        "Output" : "MFD_FileLevelView244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "MFDProcessedTable_Template",
+        "Output" : "MFDProcessedTable_Template244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "ReceiveXMLMessageTemplate",
+        "Output" : "ReceiveXMLMessageTemplate244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    },
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "MFD_SP_2_FileRecTypeRecords",
+        "Output" : "MFD_SP_2_FileRecTypeRecords244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    }    
+]

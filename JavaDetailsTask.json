@@ -1,0 +1,13 @@
+[
+    {
+        "Task" : "GenerateJavaFileDetails",
+        "Template" : "FileClassDetailsTemplate",
+        "Output" : "FileClassDetails.java",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "5/14-1"
+    }
+]

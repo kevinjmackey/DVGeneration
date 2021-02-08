@@ -1,0 +1,24 @@
+[
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "LegacyOnDiskTemplate",
+        "Output" : "LegacyTables246.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"]
+    },
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "MFD_SP_3_ProcessMessageTypeTemplate",
+        "Output" : "MFD_SP_3_ProcessMessageType243.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : []
+    }
+]

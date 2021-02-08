@@ -1,0 +1,399 @@
+<!--(set_escape)-->
+  None
+<!--(end)-->
+
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+PRINT 'Installing @!schemaName!@_Stage.@!fileName!@_Process_MFD_Messages_SP'
+
+IF EXISTS (SELECT *
+           FROM [dbo].[sysobjects]
+           WHERE [id] = OBJECT_ID(N'@!schemaName!@_Stage.@!fileName!@_Process_MFD_Messages_SP')
+           AND OBJECTPROPERTY([id],N'IsProcedure') = 1)
+   DROP PROCEDURE [@!schemaName!@_Stage].[@!fileName!@_Process_MFD_Messages_SP];
+   GO
+/*
+==================================================================================
+ MFD Read XML Messages for @!fileName!@
+    -- @!fileName!@_Process_MFD_Messages_SP
+        Template developed by DataView LLC
+        Major funtional elements complete as of 3/27/2017:
+        "Traffic Cop" procedure calling individual rectype value procedures
+
+    -- Template Version 1.1
+    -- Version 1.0  Initial version incorporating the functionality from the Python Projects template
+    -- Version 1.1  Add Extended Properties to record the Data Dictionary version that created these procedures
+    -- Version 1.2  Changed logging levels. Passing log levels to SP3
+
+                        /**********************LOGGING LEVELS**********************************************/
+
+                        Level		Name		Description
+                        0			Off			No logging occurs
+                        1			Error	 	the system is in distress, customers are probably being affected (or will soon be) and the fix probably 
+                        						requires human intervention. The "2AM rule" applies here- if you're on call, do you want to be woken up 
+                        						at 2AM if this condition happens? If yes, then log it as "error".
+                        2			Warning	 	an unexpected technical or business event happened, customers may be affected, but probably no immediate 
+                        						human intervention is required. On call people won't be called immediately, but support personnel will 
+                        						want to review these issues asap to understand what the impact is. Basically any issue that needs to be 
+                        						tracked but may not require immediate intervention.
+                        3			Info		things we want to see at high volume in case we need to forensically analyze an issue. System lifecycle 
+                        						events (system start, stop) go here. "Session" lifecycle events (login, logout, etc.) go here. Significant 
+                        						boundary events should be considered as well (e.g. database calls, remote API calls). Typical business 
+                        						exceptions can go here (e.g. login failed due to bad credentials). Any other event you think you'll need to 
+                        						see in production at high volume goes here.
+                        4			Debug	 	just about everything that doesn't make the "info" cut... any message that is helpful in tracking the flow 
+                        						through the system and isolating issues, especially during the development and QA phases. We use "debug" 
+                        						level logs for entry/exit of most non-trivial methods and marking interesting events and decision points 
+                        						inside methods.
+                        5			Trace	 	we don't use this often, but this would be for extremely detailed and potentially high volume logs that 
+                        						you don't typically want enabled even during normal development. Examples include dumping a full object 
+                        						hierarchy, logging some state during every iteration of a large loop, etc.
+                        
+                        /**********************LOGGING LEVELS**********************************************/
+
+
+       -- Version 1.3  No longer logging metrics from receive proc. Passing to SP2 and SP3 to log with SP3 as single record
+       -- Version 1.31 Removed @v for variable use. Pulling directly from inmemory procedure configuration tables
+       -- Version 1.32 Added @base to xml output when unknown rectype is found
+       -- Version 1.4 Added @Preserve_Deleted_Records to procedure configuration pickup and pass to SP3 to flag 
+       -- if deleted records should be moved to deleted tables. 
+
+
+==================================================================================
+*/
+CREATE PROCEDURE [@!schemaName!@_Stage].[@!fileName!@_Process_MFD_Messages_SP]
+     @k [RTM].[Message_Binary_Keys] READONLY
+     ,@base [@!schemaName!@_Stage].[Messages_@!fileName!@_base] READONLY
+    <!--(if hasReoccur=="Y")-->   
+    ,@reoccur [@!schemaName!@_Stage].[Messages_@!fileName!@_reoccur] READONLY
+    <!--(end)-->
+     ,@ExecutionID UNIQUEIDENTIFIER = NULL
+     ,@Delivery_Time_MS int = 0
+     ,@Receive_Processing_Time_MS int = 0
+     ,@Received_XML_Count int = 0
+     ,@Received_Processed_Count INT = 0
+AS
+    BEGIN
+        SET NOCOUNT ON
+        DECLARE @SendToMetrics BIT      = 0;
+        DECLARE @SourceName NVARCHAR(255) = ISNULL('@!fileName!@_Process_MFD_Messages_SP', 'Procedure_Name_Unavailable');
+        DECLARE @log_level INT    = 0;
+        DECLARE @retry_wait_MS INT  = 200;
+        DECLARE @Max_Error_Retry INT = 5;
+        DECLARE @xml XML; 
+        DECLARE @SP_InitiationTS DATETIME2 = SysDateTime();
+        DECLARE @SP_CompletionTS DATETIME2;
+        DECLARE @SP2_ProcessingTime_MS int = null
+        DECLARE @Preserve_Deleted_Records BIT = 0
+
+                    SELECT @SP2_ProcessingTime_MS = Avg(CASE WHEN DateDiff(D, @SP_InitiationTS, sysdatetime()) > 24 THEN NULL
+                                                                   ELSE DateDiff(MS, @SP_InitiationTS, sysdatetime())
+                                                              END)
+
+    --Record type load flags
+<!--(for i,rectype in enumerate(rectypenames))-->
+        DECLARE @Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)--> BIT = 1; 
+<!--(end)-->
+
+        
+        SELECT  @SendToMetrics = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'SendToMetrics'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP'
+        AND [SchemaName] = '@!schemaName!@_Stage';
+
+        SELECT  @log_level = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'log_level'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP'
+        AND [SchemaName] = '@!schemaName!@_Stage';
+
+        SELECT  @retry_wait_MS = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'retry_wait_MS'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP'
+        AND [SchemaName] = '@!schemaName!@_Stage';
+
+        SELECT  @Max_Error_Retry = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'Max_Error_Retry'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP'
+        AND [SchemaName] = '@!schemaName!@_Stage';
+
+        SELECT  @Preserve_Deleted_Records = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'Preserve_Deleted_Records'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP'
+        AND [SchemaName] = '@!schemaName!@_Stage';
+
+<!--(for i,rectype in enumerate(rectypenames))-->
+        SELECT  @Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)--> = [varValueInt]
+        FROM    [RTM].[ProcedureConfiguration]
+        WHERE   [varName] = 'Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->'
+        AND [ProcedureName] = '@!fileName!@_Process_MFD_Messages_SP' AND [SchemaName] = '@!schemaName!@_Stage';
+<!--(end)-->
+
+        		IF @log_level >= 4
+BEGIN
+        
+               
+
+                SET @xml = ( SELECT [k1].[record_key]
+									,[k1].[rectype]
+									,[k1].[message_ts]
+									,[k1].[dts_dttmsp]
+									,[k1].[Retry_Attempt]
+									,[SPID] = @@SPID
+									,[TransactionCount] = @@TRANCOUNT
+									,[Xact_State] = Xact_State()
+                                    ,[ExecutionID] = @ExecutionID
+                                    <!--(for i,rectype in enumerate(rectypenames))-->
+                                    ,[Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->] = @Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)--> 
+                                    <!--(end)-->
+                             FROM   @k [k1]
+                           FOR
+                             XML PATH
+                           );
+
+                EXEC [RTM].[AddEvent] @Level = 2,
+                    @Source = @SourceName, -- nvarchar(4000)
+                    @Details = N'SP Start', -- nvarchar(4000)
+                    @IntResult = 1, -- int
+                    @SessionId = @ExecutionID, -- varchar(255)
+                    @Message_Body = @xml; -- xml
+                        
+            
+END;
+
+
+
+        BEGIN TRY
+            DECLARE @k1 [RTM].[Message_Binary_Keys];
+            DECLARE @k2 [RTM].[Message_Binary_Keys];
+ 
+            INSERT  INTO @k1
+                    ([record_key]
+                    ,[dts_dttmsp]
+                    ,[rectype]
+                    ,[message_ts]
+                    ,[Retry_Attempt]
+                    ,[payload]
+                    )
+            SELECT  [a].[record_key]
+                   ,[a].[dts_dttmsp]
+                   ,[a].[rectype]
+                   ,[a].[message_ts]
+                   ,[a].[Retry_Attempt]
+                   ,[a].[payload]
+            FROM    ( SELECT    [record_key]
+                               ,[dts_dttmsp]
+                               ,[rectype] = NULLIF([rectype], '')
+                               ,[message_ts]
+                               ,[Retry_Attempt]
+                               ,[payload]
+                               ,[rownum] = ROW_NUMBER() OVER ( PARTITION BY [record_key] ORDER BY [dts_dttmsp] DESC )
+                      FROM      @k
+                    ) [a]
+            WHERE   [a].[rownum] = 1; --filtering out any duplication of record keys by choosing the most recent DTS
+
+<!--(for i,rectype in enumerate(rectypenames))-->
+        IF @Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)--> = 1
+            BEGIN
+                DELETE  FROM @k2;
+
+                INSERT  INTO @k2
+                SELECT  [k].*
+                FROM    @k1 [k]
+    <!--(if rectype[0] != "No Rectype")-->
+                WHERE   [k].[rectype] = '@!rectype[0]!@';
+    <!--(else)-->
+                WHERE   [k].[rectype] IS NULL
+    <!--(end)-->
+
+                IF @@ROWCOUNT > 0
+                    BEGIN 
+
+                        SELECT @SP2_ProcessingTime_MS = Avg(CASE WHEN DateDiff(D, @SP_InitiationTS, sysdatetime()) > 24 THEN NULL
+                                               ELSE DateDiff(MS, @SP_InitiationTS, sysdatetime())
+                                          END)
+
+                        EXECUTE [@!schemaName!@_Stage].[@!fileName!@_Process_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->_Message] 
+                                @k2
+                                ,@base 
+                                <!--(if hasReoccur=="Y")-->   
+                                ,@reoccur
+                                <!--(end)-->
+                                ,@SendToMetrics
+                                ,@log_level
+                                ,@retry_wait_MS
+                                ,@ExecutionID
+                                ,@Max_Error_Retry 
+                                ,@Delivery_Time_MS 
+                                ,@Receive_Processing_Time_MS 
+                                ,@Received_XML_Count 
+                                ,@Received_Processed_Count
+                                ,@SP2_ProcessingTime_MS
+                                ,@Preserve_Deleted_Records;
+
+                        DELETE  [k1]
+                        FROM    @k1 [k1]
+                        JOIN    @k2 [k2] ON [k1].[record_key] = [k2].[record_key];
+                    END; 
+            END; 
+<!--(end)-->
+
+IF @log_level >= 2
+BEGIN
+        --IF records still exist that are not processed, log into rtm.sysEvent table
+ 	    IF (SELECT Count(1) FROM @k1) > 0 
+            BEGIN
+                
+
+                SET @xml = ( SELECT [b].*
+									,[k1].[Retry_Attempt]
+									,[SPID] = @@SPID
+									,[TransactionCount] = @@TRANCOUNT
+									,[Xact_State] = Xact_State()
+                                    ,[ExecutionID] = @ExecutionID
+								    --Record type load flags
+                                    <!--(for i,rectype in enumerate(rectypenames))-->
+                                    ,[Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)-->] = @Load_@!fileName!@<!--(if rectype[0] != "No Rectype")-->_@!rectypevalues[i]!@<!--(end)--> 
+                                    <!--(end)-->
+
+                             FROM   @k1 [k1]
+							 LEFT JOIN @base [b] ON [b].[RECORD_KEY] = [k1].[record_key] AND [b].[DTS_DTTMSP] = [k1].[dts_dttmsp]
+                           FOR
+                             XML PATH
+                           );
+
+                EXEC [RTM].[AddEvent] @Level = 2,
+                    @Source = @SourceName, -- nvarchar(4000)
+                    @Details = N'@!fileName!@ Process Message SP - Messages Not Processed', -- nvarchar(4000)
+                    @IntResult = 1, -- int
+                    @SessionId = @ExecutionID, -- varchar(255)
+                    @Message_Body = @xml; -- xml
+                        
+            END; 
+END;
+
+        END TRY
+        BEGIN CATCH
+            DECLARE @ErrorNumber INT = ERROR_NUMBER();
+            DECLARE @ErrorSource NVARCHAR(256) = '@!fileName!@_Process_MFD_Messages_SP';
+            DECLARE @ErrorLine INT = ERROR_LINE();
+            DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+            DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+            DECLARE @ErrorState INT = ERROR_STATE();
+            DECLARE @ErrorUser sysname = SUSER_SNAME();
+
+            DECLARE @message XML; 
+
+            IF Xact_State() <> 0 ROLLBACK
+
+            --this should probably be expanded to include the @base and @reoccur values so we can see the data 
+            SET @message = ( SELECT [k1].[record_key]
+									,[k1].[rectype]
+									,[k1].[message_ts]
+									,[Expected_DTS_DTTMSP] = [k1].[dts_dttmsp]
+									,[k1].[Retry_Attempt]
+									,[SPID] = @@SPID
+									,[ErrorNumber] = @ErrorNumber
+									,[ErrorSource] = @ErrorSource
+									,[ErrorLine] = @ErrorLine
+									,[ErrorMessage] = @ErrorMessage
+									,[ErrorSeverity] = @ErrorSeverity
+									,[ErrorState] = @ErrorState
+									,[ErrorUser] = @ErrorUser
+									,[TransactionCount] = @@TRANCOUNT
+									,[Xact_State] = Xact_State()
+                                    ,[ExecutionID] = @ExecutionID
+                             FROM   @k k1
+                           FOR
+                             XML PATH
+                           );
+
+            INSERT  INTO [RTM].[Process_M204_ErrorLog]
+                    ([Error_Number]
+                    ,[Error_Source]
+                    ,[Error_Line]
+                    ,[Error_Message]
+                    ,[Error_Severity]
+                    ,[Error_State]
+                    ,[Error_Date]
+                    ,[Error_User_System]
+                    ,[M204_File]
+                    ,[record_key]
+                    ,[dts_dttmsp]
+                    ,[rectype]
+                    ,[message_ts]
+                    ,[Message_Body]
+                    ,[binary_payload]
+                    ,[Source_Process]
+                    )
+            SELECT  @ErrorNumber
+                   ,@ErrorSource
+                   ,@ErrorLine
+                   ,@ErrorMessage
+                   ,@ErrorSeverity
+                   ,@ErrorState
+                   ,GETDATE()
+                   ,@ErrorUser
+                   ,[M204_File] = '@!fileName!@'
+                   ,[k].[record_key]
+                   ,[k].[dts_dttmsp]
+                   ,[k].[rectype]
+                   ,[k].[message_ts]
+                   ,@message
+                   ,[k].[payload]
+                   ,'MFD_Load'
+            FROM    ( SELECT    [id] = 1
+                    ) [d]
+            LEFT JOIN @k [k] ON ISNULL([k].[record_key], 1) = COALESCE([k].[record_key], 1);
+        END CATCH;
+    END;
+
+    go
+
+
+DECLARE @schema_name NVARCHAR(255) = '@!schemaName!@_Stage'
+DECLARE @object_type NVARCHAR(255) = 'P'
+DECLARE @object_name NVARCHAR(255) = '@!fileName!@_Process_MFD_Messages_SP'
+
+
+IF EXISTS ( SELECT
+                    *
+                FROM
+                    [sys].[extended_properties] [EP]
+                LEFT JOIN [sys].[all_objects] [O] ON [EP].[major_id] = [O].[object_id]
+                LEFT JOIN [sys].[schemas] [S] ON [O].[schema_id] = [S].[schema_id]
+                LEFT JOIN [sys].[columns] AS [c] ON [EP].[major_id] = [c].[object_id] AND
+                                                    [EP].[minor_id] = [c].[column_id]
+                WHERE
+                    [EP].[name] = 'Data_Dictionary_Version' AND
+                    [S].[name] = @schema_name AND
+                    [O].[type] = @object_type AND
+                    [O].[name] = @object_name )
+
+    EXEC [sys].[sp_updateextendedproperty]
+        @name = N'Data_Dictionary_Version'
+       ,@value = N'@!ddVersion!@'
+       ,@level0type = N'SCHEMA'
+       ,@level0name = @schema_name
+       ,@level1type = N'PROCEDURE'
+       ,@level1name = @object_name
+        
+ELSE
+    EXEC [sys].[sp_addextendedproperty]
+        @name = N'Data_Dictionary_Version'
+       ,@value = N'@!ddVersion!@'
+       ,@level0type = N'SCHEMA'
+       ,@level0name = @schema_name
+       ,@level1type = N'PROCEDURE'
+       ,@level1name = @object_name
+
+
+GO
+

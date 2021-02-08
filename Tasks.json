@@ -1,0 +1,74 @@
+[
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "LegacyOnDiskTemplate",
+        "Output" : "LegacyTables245.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "7/29-1"
+    },
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "GenerateProcessMessageSPTemplate",
+        "Output" : "LegacyProcessMessage245.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "7/29-1"
+    },
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "CLRFunctionDefinitionTemplate",
+        "Output" : "LegacyFunctions245.sql",
+        "Folder" : "stage",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "7/29-1"
+    },
+    {
+        "Task" : "GenerateShredders",
+        "Template" : "XMLShredderTemplate",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/shredders/",
+        "FilePrefix" : "",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "5/2-2"
+    },
+    {
+        "Task" : "GenerateJavaFiles",
+        "Template" : "JavaFileBaseClassTemplate",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/java/",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "7/29-1"
+    },
+    {
+        "Task" : "GenerateJavaFileDetails",
+        "Template" : "FileClassDetailsTemplate",
+        "Output" : "FileClassDetails.java",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "7/29-1"
+    }
+]

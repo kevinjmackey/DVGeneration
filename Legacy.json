@@ -1,0 +1,64 @@
+[
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "LegacyOnDiskTemplate",
+        "Output" : "LegacyTables257.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "4/26-1"
+    },
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "GenerateProcessMessageSPTemplate",
+        "Output" : "LegacyProcessMessage257.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "4/26-1"
+    },
+    {
+        "Task" : "GenerateShredders",
+        "Template" : "XMLShredderTemplate",
+        "Container" : "dvcodegencontainer",
+        "FilePath" : "assets/output/shredders/",
+        "FilePrefix" : "",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "4/26-1"
+    },
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "CLRFunctionDefinitionTemplate",
+        "Output" : "LegacyFunctions257.sql",
+        "Folder" : "stage",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "4/26-1"
+    },
+    {
+        "Task" : "GenerateFileLevelStructures",
+        "Template" : "GenerateFilterMessageSPTemplate",
+        "Output" : "FilteredSPs257.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : [],
+        "Include" : ["CARS","CSCQ","TFQ","WEB"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "4/26-1"
+    }    
+]

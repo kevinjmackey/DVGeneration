@@ -1,0 +1,14 @@
+[
+    {
+        "Task" : "GenerateDWObjects",
+        "Template" : "DeleteMFDSurplusRecordsTemplate",
+        "Output" : "DeleteMFDSurplusRecordsTemplate244.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "dw",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "7/15-1"
+    }    
+]

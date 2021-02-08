@@ -1,0 +1,16 @@
+azure-functions==1.0.0b3
+azure-functions-worker==1.0.0b4
+asn1crypto==0.24.0
+azure-common==1.1.18
+azure-cosmosdb-nspkg==2.0.2
+azure-cosmosdb-table==1.0.5
+azure-storage-common==1.4.0
+azure-storage-blob==1.5.0
+python-dateutil==2.8.0
+requests==2.21.0
+pyratemp==0.3.2
+aiohttp==3.5.4
+async-timeout==3.0.1
+attrs==19.1.0
+certifi==2019.3.9
+chardet==3.0.4

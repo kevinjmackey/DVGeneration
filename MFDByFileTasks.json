@@ -1,0 +1,24 @@
+[
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "MFD_FileLevelView",
+        "Output" : "MFD_FileLevelView243.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "6/19-1"
+    },
+    {
+        "Task" : "GenerateDDLBySource",
+        "Template" : "MFD_SP_2_FileRecTypeRecords",
+        "Output" : "MFD_SP_2_FileRecTypeRecords243.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Exclude" : [],
+        "All" : "True",
+        "Options" : [],
+        "Test" : "6/19-1"
+    }
+]
