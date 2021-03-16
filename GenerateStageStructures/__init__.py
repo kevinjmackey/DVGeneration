@@ -9,11 +9,12 @@ import azure.functions as func
 from azure.cosmosdb.table.tableservice import TableService
 from azure.cosmosdb.table.models import Entity
 
-def GetSources(environment, _account_name, _account_key):
+def GetSources(_environment, _ddVersion, _account_name, _account_key):
     sources = {}
-    if environment is not None:
+    if _environment is not None:
         try:
-            queryFilter = "(PartitionKey eq '{}')".format(environment)
+            queryFilter = "(PartitionKey eq '{0}-{1}')".format(_environment, _ddVersion)
+            log.info(f'Query filter: {queryFilter}')
             table_service = TableService(account_name=_account_name,account_key=_account_key)
             entities = table_service.query_entities("dvSource", filter = queryFilter)
             for entity in entities:
@@ -111,7 +112,7 @@ async def main(req: func.HttpRequest, inputBlob: func.InputStream,
     options = req_body.get("Options")
     template = req_body.get("Template")
     LogFunctionState(f"{environment}-{ddVersion}", functionName, "{}-1".format(functionInstance), "Started",template,str(req.get_json()), my_account_name, my_account_key)
-    sources = GetSources(environment, my_account_name, my_account_key)
+    sources = GetSources(environment, ddVersion, my_account_name, my_account_key)
     outputFiles = []
     t = pyratemp.Template(inputBlob.read())
     files = []

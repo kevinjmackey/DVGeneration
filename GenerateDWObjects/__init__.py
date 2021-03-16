@@ -27,18 +27,39 @@ class MFDLegacyMap:
     IsHistoryTable = "N"
     HistoryTableName = "none"
 
-def GetSources(environment, _account_name, _account_key):
+def GetSources(_environment, _ddVersion, _account_name, _account_key):
     sources = {}
-    if environment is not None:
+    if _environment is not None:
         try:
-            queryFilter = "(PartitionKey eq '{}')".format(environment)
+            queryFilter = "(PartitionKey eq '{0}-{1}')".format(_environment, _ddVersion)
+            log.info(f'Query filter: {queryFilter}')
             table_service = TableService(account_name=_account_name,account_key=_account_key)
             entities = table_service.query_entities("dvSource", filter = queryFilter)
             for entity in entities:
                 if entity.isActive==1:
                     sources[entity.RowKey] = entity.rectype
         except Exception as e:
-            logging.error(e)
+            log.error(e)
+            sources = {}
+        finally:
+            table_service = None
+    else:
+        sources = {}
+
+    return sources
+def GetSources(_environment, _ddVersion, _account_name, _account_key):
+    sources = {}
+    if _environment is not None:
+        try:
+            queryFilter = "(PartitionKey eq '{0}-{1}')".format(_environment, _ddVersion)
+            log.info(f'Query filter: {queryFilter}')
+            table_service = TableService(account_name=_account_name,account_key=_account_key)
+            entities = table_service.query_entities("dvSource", filter = queryFilter)
+            for entity in entities:
+                if entity.isActive==1 and not entity.RowKey.endswith("_HIST"):
+                    sources[entity.RowKey] = entity.rectype
+        except Exception as e:
+            log.error(e)
             sources = {}
         finally:
             table_service = None
@@ -203,7 +224,7 @@ async def main(req: func.HttpRequest, inputBlob: func.InputStream,
     template = req_body.get("Template")
     LogFunctionState(f"{environment}-{ddVersion}", functionName, "{}-1".format(functionInstance), "Started",template,str(req.get_json()), my_account_name, my_account_key)
     t = pyratemp.Template(inputBlob.read())
-    sources = GetSources(environment, my_account_name, my_account_key)
+    sources = GetSources(environment, ddVersion, my_account_name, my_account_key)
     for source in sources.keys():
         if str(source) not in exclude:
             try:

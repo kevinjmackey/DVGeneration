@@ -11,11 +11,12 @@ from azure.cosmosdb.table.models import Entity
 from azure.storage.blob import BlockBlobService, PageBlobService, AppendBlobService
 from azure.storage.blob.models import BlobBlock, ContainerPermissions, ContentSettings
 
-def GetSources(environment, _account_name, _account_key):
+def GetSources(_environment, _ddVersion, _account_name, _account_key):
     sources = {}
-    if environment is not None:
+    if _environment is not None:
         try:
-            queryFilter = "(PartitionKey eq '{}')".format(environment)
+            queryFilter = "(PartitionKey eq '{0}-{1}')".format(_environment, _ddVersion)
+            log.info(f'Query filter: {queryFilter}')
             table_service = TableService(account_name=_account_name,account_key=_account_key)
             entities = table_service.query_entities("dvSource", filter = queryFilter)
             for entity in entities:
@@ -114,7 +115,7 @@ async def main(req: func.HttpRequest, inputBlob: func.InputStream, context: func
     filePrefix = "" if req_body.get("FilePrefix") == None else req_body.get("FilePrefix")
     template = req_body.get("Template")
     LogFunctionState(f"{environment}-{ddVersion}", functionName, "{}-1".format(functionInstance), "Started",template,str(req.get_json()), my_account_name, my_account_key)
-    sources = GetSources(environment, my_account_name, my_account_key)
+    sources = GetSources(environment, ddVersion, my_account_name, my_account_key)
     t = pyratemp.Template(inputBlob.read())
     # Create the BlockBlockService that is used to call the Blob service for the storage account.
     block_blob_service = BlockBlobService(account_name = my_account_name, account_key = my_account_key) 
