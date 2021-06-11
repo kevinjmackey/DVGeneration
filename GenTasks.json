@@ -1,17 +1,5 @@
 [
     {
-        "Task" : "GenerateStageStructures",
-        "Template" : "LegacyOnDiskTemplate",
-        "Output" : "LegacyDDL245.sql",
-        "Version" : -1,
-        "Environment" : "YRC-M204",
-        "Folder" : "stage",
-        "Exclude" : ["PAS","PASH"],
-        "All" : "True",
-        "Options" : ["xP"],
-        "Test" : "8/10-1"
-    },
-    {
         "Task" : "GenerateJavaFiles",
         "Template" : "JavaFileBaseClassTemplate",
         "Container" : "dvcodegencontainer",
