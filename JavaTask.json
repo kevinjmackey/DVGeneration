@@ -9,7 +9,7 @@
         "Exclude" : [],
         "All" : "True",
         "Options" : [],
-        "Test" : "4/26-1"
+        "Test" : "1/3-1"
     },
     {
         "Task" : "GenerateJavaFileDetails",
@@ -20,6 +20,6 @@
         "Exclude" : [],
         "All" : "True",
         "Options" : [],
-        "Test" : "4/26-1"
+        "Test" : "1/3-1"
     }
 ]

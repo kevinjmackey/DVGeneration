@@ -4,12 +4,12 @@
         "Template" : "XMLShredderTemplate",
         "Container" : "dvcodegencontainer",
         "FilePath" : "assets/output/shredders/",
-        "FilePrefix" : "",
         "Version" : -1,
         "Environment" : "YRC-M204",
+        "FilePrefix" : "",
         "Exclude" : [],
         "All" : "True",
         "Options" : [],
-        "Test" : "8/6-1"
+        "Test" : "7/16-1"
     }
 ]

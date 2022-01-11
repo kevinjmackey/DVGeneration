@@ -1,0 +1,16 @@
+[
+
+    {
+        "Task" : "GenerateFileLevelStructures",
+        "Template" : "GenerateFilterMessageSPTemplate",
+        "Output" : "FilteredSPs291.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : [],
+        "Include" : ["CARS","CSCQ","TFQ","WEB"],
+        "All" : "True",
+        "Options" : [],
+        "Generate" : "1/3-1"
+    }
+]

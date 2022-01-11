@@ -1,0 +1,26 @@
+[
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "LegacyOnDiskTemplate",
+        "Output" : "LegacyTables291.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "1/3-1"
+    },
+    {
+        "Task" : "GenerateStageStructures",
+        "Template" : "GenerateProcessMessageSPTemplate",
+        "Output" : "LegacyProcessMessage291.sql",
+        "Version" : -1,
+        "Environment" : "YRC-M204",
+        "Folder" : "stage",
+        "Exclude" : ["PAS","PASH"],
+        "All" : "True",
+        "Options" : ["xP"],
+        "Generate" : "1/3-1"
+    }
+]
