@@ -2,7 +2,7 @@
     {
         "Task" : "GenerateStageStructures",
         "Template" : "LegacyOnDiskTemplate",
-        "Output" : "LegacyTables246.sql",
+        "Output" : "LegacyTables999.sql",
         "Version" : -1,
         "Environment" : "YRC-M204",
         "Folder" : "stage",

@@ -163,25 +163,25 @@ def HasReoccur(_mfdTableList, _mfdColumnList):
 
     return mfdTableList
 
-def GetSources(environment, _account_name, _account_key):
+def GetSources(_environment, _ddVersion, _account_name, _account_key):
     sources = {}
-    if environment is not None:
+    if _environment is not None:
         try:
-            queryFilter = "(PartitionKey eq '{}')".format(environment)
-            print('Query filter: {}'.format(queryFilter))
+            queryFilter = "(PartitionKey eq '{0}-{1}') and (RowKey eq 'RMTH')".format(_environment, _ddVersion)
+            print(f'Query filter: {queryFilter}')
             table_service = TableService(account_name=_account_name,account_key=_account_key)
             entities = table_service.query_entities("dvSource", filter = queryFilter)
             for entity in entities:
                 if entity.isActive==1 and not entity.RowKey.endswith("_HIST"):
                     sources[entity.RowKey] = entity.rectype
-            print("Retrieved {} sources".format(len(sources)))
         except Exception as e:
-            print(e)
+            log.error(e)
             sources = {}
         finally:
             table_service = None
     else:
         sources = {}
+
     print("Retrieved {} sources".format(len(sources)))
 
     return sources
@@ -195,7 +195,7 @@ def GetMetadataFromDD(_environment, _file, _ddVersion, _account_name, _account_k
     deprecatedMethodList = []
     mfdTable = MFDTable()
     currentTable = "First time through"
-    fieldsToSkip = ['Create_TS','Modify_ID','Modify_TS','OCCNO','RowID','PartitionKey', 'SOURCEDELETED', 'DTS_DTTMSP','HASH', 'Distributed_KEY', 'Modification_Count']
+    fieldsToSkip = ['Create_TS', 'Distributed_KEY', 'DTS_DTTMSP','HASH', 'Modification_Count','Modify_ID','Modify_TS','OCCNO','PartitionKey','RECORD_KEY','RowID', 'SOURCEDELETED']
     try:
         queryFilter = """(PartitionKey eq '{0}') and (RowKey ge '{1}-{2}') and (RowKey lt '{1}-{2}.')""".format(_environment, _ddVersion, _file)
         table_service = TableService(account_name=_account_name, account_key=_account_key)
@@ -209,7 +209,7 @@ def GetMetadataFromDD(_environment, _file, _ddVersion, _account_name, _account_k
                 mfdColumn.tableName = entity.TableName
                 mfdColumn.rectype = "No Rectype" if entity.RecordType == "Blank Rectype" else entity.RecordType
                 mfdColumn.dbColumnName = entity.ColumnName
-                mfdColumn.dataType = entity.SqlType
+                mfdColumn.dataType = str(entity.SqlType).strip()
                 mfdColumn.length = str(entity.ColumnLength)
                 mfdColumn.decimalPlaces = str(entity.DecimalPlaces)
                 mfdColumn.occurs = "Y" if entity.OccurenceFlag == True else "N"
@@ -218,7 +218,7 @@ def GetMetadataFromDD(_environment, _file, _ddVersion, _account_name, _account_k
                 dbColumn = MFDColumn()
                 dbColumn.dbColumnName = str(mfdColumn.dbColumnName)
                 dbColumn.javaName = str(mfdColumn.javaColumnName)
-                dbColumn.dataType = str(entity.JavaDataType)
+                dbColumn.dataType = str(entity.JavaDataType).strip()
                 dbColumn.length = str(mfdColumn.length)
                 dbColumn.decimalPlaces = str(mfdColumn.decimalPlaces)
                 dbColumn.occurs = str(mfdColumn.occurs)
@@ -286,8 +286,8 @@ def GenerateJava(_environment, _file, _ddVersion, _filePath,
         if column.length == "-1":
             longFields.append('"' + column.dbColumnName.replace("_",".") + '"')
     hasLongFields = "Y" if len(longFields) > 0 else "N"
-    # for col in distinctColumnList:
-    #     print("{0}:{1}:{2}:{3}:{4}:{5}".format(col.dbColumnName, col.javaName, col.dataType, col.length, col.decimalPlaces, col.occurs))
+    for col in distinctColumnList:
+        print("{0}:{1}:{2}:{3}:{4}:{5}".format(col.dbColumnName, col.javaName, col.dataType, col.length, col.decimalPlaces, col.occurs))
     d = {}
     d["version"] = GENERATOR_VERSION
     d["date"] = "{0}T{1}".format(str(datetime.today().date()),str(datetime.today().time()))
@@ -320,13 +320,13 @@ def main():
 
     my_account_name = "dvcodegeneration"
     my_account_key = "7fl0rjn5ajtEBMg30n3jAnzdhMKFuE0MMqqae7Pv5AJAl47XYjNxZ8Ig8gvgvdKOUAGF7oGLz+TUXMcM0fLeVg=="
-    sources = GetSources("YRC-M204", my_account_name, my_account_key)
+    sources = GetSources("YRC-M204", 291, my_account_name, my_account_key)
     t = pyratemp.Template(filename="JavaFileBaseClassTemplate.tmpl")
     exclude = []
     for source in sources.keys():
         if str(source) not in exclude:
             try:
-                GenerateJava("YRC-M204", str(source),245, ".",
+                GenerateJava("YRC-M204", str(source),291, ".",
                      my_account_name, my_account_key, t)
             except Exception as ex:
                 print("Exception{}".format(ex))

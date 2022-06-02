@@ -23,13 +23,6 @@ import com.yrc.mcc.data.model.@!table.javaName!@HistReoccurId;
 @SuppressWarnings("serial")
 public class @!file!@_Generated extends M204Rec
 {
-<!--(if hasLongFields=="Y")-->
-    static final List<String> clobFields = Arrays.asList(new String[] {@!",".join(longfields)!@});
-    @Override
-    public boolean isClobField(final String m204ColumnName) {
-        return clobFields.contains(m204ColumnName);
-    }
-<!--(end)-->
 <!--(for i,distinctC in enumerate(distinctColumnList))-->
     <!--(if distinctC.dataType.upper()=="INT")-->
     public int get<!--(if distinctC.dbColumnName.endswith("_R"))-->@!distinctC.javaName[0:len(distinctC.javaName)-1]!@<!--(else)-->@!distinctC.javaName!@<!--(end)-->() { return getInt("@!distinctC.dbColumnName!@"); }
@@ -55,7 +48,7 @@ public class @!file!@_Generated extends M204Rec
     public void set<!--(if distinctC.dbColumnName.endswith("_R"))-->@!distinctC.javaName[0:len(distinctC.javaName)-1]!@<!--(else)-->@!distinctC.javaName!@<!--(end)-->(int index, Object value) { setInt(index, "@!distinctC.dbColumnName!@", value); }
         <!--(end)-->
     <!--(end)-->
-    <!--(if distinctC.dataType.upper()=="VARCHAR" or distinctC.dataType=="NUMERIC")-->
+    <!--(if distinctC.dataType.upper()=="VARCHAR" or distinctC.dataType.upper()=="NUMERIC")-->
     public String get<!--(if distinctC.dbColumnName.endswith("_R"))-->@!distinctC.javaName[0:len(distinctC.javaName)-1]!@<!--(else)-->@!distinctC.javaName!@<!--(end)-->() { return getString("@!distinctC.dbColumnName!@"); }
     public void set<!--(if distinctC.dbColumnName.endswith("_R"))-->@!distinctC.javaName[0:len(distinctC.javaName)-1]!@<!--(else)-->@!distinctC.javaName!@<!--(end)-->(Object value) { setString("@!distinctC.dbColumnName!@", value); }
         <!--(if distinctC.occurs=="Y")-->

@@ -2,14 +2,14 @@
     {
         "Task" : "GenerateStageStructures",
         "Template" : "CLRFunctionDefinitionTemplate",
-        "Output" : "LegacyFunctions291.sql",
+        "Output" : "LegacyFunctions296.sql",
         "Folder" : "stage",
         "Version" : -1,
         "Environment" : "YRC-M204",
         "Exclude" : ["PAS","PASH"],
         "All" : "True",
         "Options" : [],
-        "Generate" : "1/3-1"
+        "Generate" : "1/6-2"
     },
     {
         "Task" : "GenerateShredders",
@@ -22,5 +22,5 @@
         "Exclude" : [],
         "All" : "True",
         "Options" : [],
-        "Test" : "1/3-1"
+        "Test" : "1/6-2"
     }]
